@@ -10,7 +10,11 @@ A desktop Markdown editor built with **JavaFX 21**. Switch between Source, Previ
 
 ## Highlights
 
-- CommonMark rendering with GFM extensions (tables, strikethrough, autolinks)
+- Three editing modes: **Source** (monospaced editor), **Preview** (rendered), **WYSIWYG** (visual editing)
+- **WYSIWYG formatting toolbar** — headings, bold, italic, strikethrough, lists, blockquote, code, links, and more without writing Markdown syntax
+- **Built-in Markdown reference** — press F1 for instant syntax help
+- CommonMark rendering with GFM extensions (tables, strikethrough, autolinks, heading anchors)
+- **File associations** — `.md` files open directly in Preview when double-clicked
 - Native installers for Linux, Windows, and macOS
 - Open-source under the GNU GPL v3
 
