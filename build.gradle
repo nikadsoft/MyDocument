@@ -47,6 +47,12 @@ application {
     mainClass = 'net.nikad.mydocument.MyDocumentApp'
 }
 
+processResources {
+    filesMatching('**/version.properties') {
+        expand(projectVersion: project.version.toString())
+    }
+}
+
 test {
     useJUnitPlatform()
     jvmArgs '-Dtestfx.robot=glass', '-Dtestfx.headless=true',
@@ -110,7 +116,10 @@ jlink {
         appVersion    = project.version.replaceAll('-SNAPSHOT', '')
         vendor        = 'Nikad'
         imageName     = 'MyDocument'
-        def baseOpts = ['--description', 'Markdown editor with WYSIWYG, source and preview modes']
+        def baseOpts = [
+            '--description', 'Markdown editor with WYSIWYG, source and preview modes',
+            '--file-associations', project.file('src/main/packaging/file-associations.properties').absolutePath
+        ]
         if (OperatingSystem.current().windows) {
             installerType   = 'msi'
             icon            = 'src/main/packaging/windows/icon.ico'

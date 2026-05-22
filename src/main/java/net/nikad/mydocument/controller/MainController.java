@@ -9,6 +9,9 @@ import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+
+import java.io.File;
+import java.util.Properties;
 import net.nikad.mydocument.model.Document;
 import net.nikad.mydocument.service.FileService;
 import net.nikad.mydocument.service.MarkdownRenderer;
@@ -20,6 +23,19 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 public class MainController {
+
+    private static final String APP_VERSION = loadVersion();
+
+    private static String loadVersion() {
+        try (var in = MainController.class.getResourceAsStream("/net/nikad/mydocument/version.properties")) {
+            if (in == null) return "1.0.2";
+            var props = new Properties();
+            props.load(in);
+            return props.getProperty("version", "1.0.2");
+        } catch (Exception e) {
+            return "1.0.2";
+        }
+    }
 
     @FXML private TextArea sourceEditor;
     @FXML private WebView previewPane;
@@ -367,7 +383,7 @@ public class MainController {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.initOwner(getStage());
         alert.setTitle("About MyDocument");
-        alert.setHeaderText("MyDocument 1.0.2");
+        alert.setHeaderText("MyDocument " + APP_VERSION);
         alert.setContentText("""
                 A desktop Markdown editor built with JavaFX 21.
 
@@ -387,6 +403,9 @@ public class MainController {
         previewPane.setManaged(mode == EditMode.PREVIEW);
         wysiwyPane.setVisible(mode == EditMode.WYSIWYG);
         wysiwyPane.setManaged(mode == EditMode.WYSIWYG);
+        btnSource.setSelected(mode == EditMode.SOURCE);
+        btnPreview.setSelected(mode == EditMode.PREVIEW);
+        btnWysiwyg.setSelected(mode == EditMode.WYSIWYG);
     }
 
     // ── File operations ───────────────────────────────────────────────────────
@@ -406,14 +425,23 @@ public class MainController {
         FileChooser chooser = buildMarkdownChooser("Open Markdown File");
         File file = chooser.showOpenDialog(getStage());
         if (file == null) return;
+        loadFile(file, currentMode);
+    }
+
+    public void openFile(File file) {
+        loadFile(file, EditMode.PREVIEW);
+    }
+
+    private void loadFile(File file, EditMode targetMode) {
         try {
             currentDocument = fileService.open(file.toPath());
             updatingFromWysiwyg = true;
             sourceEditor.setText(currentDocument.getContent());
             updatingFromWysiwyg = false;
             updateTitle();
-            if (currentMode == EditMode.PREVIEW) refreshPreview();
-            if (currentMode == EditMode.WYSIWYG) refreshWysiwyg();
+            applyMode(targetMode);
+            if (targetMode == EditMode.PREVIEW) refreshPreview();
+            if (targetMode == EditMode.WYSIWYG) refreshWysiwyg();
             setStatus("Opened: " + file.getName());
         } catch (IOException e) {
             showError("Open failed", e.getMessage());
