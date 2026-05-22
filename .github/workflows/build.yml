@@ -54,7 +54,7 @@ jobs:
           files: build/test-results/test/*.xml
 
       - name: Upload coverage report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: jacoco-report
@@ -113,7 +113,7 @@ jobs:
         run: ./gradlew jpackage
 
       - name: Upload installer artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: installer-${{ matrix.ext }}
           path: build/jpackage/*.${{ matrix.ext }}
@@ -128,7 +128,7 @@ jobs:
 
     steps:
       - name: Download all installers
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           pattern: installer-*
           merge-multiple: true
