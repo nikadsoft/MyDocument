@@ -25,6 +25,11 @@
                     <SeparatorMenuItem/>
                     <MenuItem text="Quit"      onAction="#onQuit"   accelerator="Ctrl+Q"/>
                 </Menu>
+                <Menu text="Help">
+                    <MenuItem text="Markdown Reference" onAction="#onHelp" accelerator="F1"/>
+                    <SeparatorMenuItem/>
+                    <MenuItem text="About"              onAction="#onAbout"/>
+                </Menu>
             </MenuBar>
 
             <ToolBar>
@@ -56,9 +61,69 @@
 
             <WebView fx:id="previewPane" visible="false" managed="false"/>
 
-            <StackPane fx:id="wysiwyPane" visible="false" managed="false">
-                <WebView fx:id="wysiwygEditor"/>
-            </StackPane>
+            <VBox fx:id="wysiwyPane" visible="false" managed="false">
+                <ToolBar>
+                    <MenuButton>
+                        <graphic><FontIcon iconLiteral="mdi2f-format-size" iconSize="16"/></graphic>
+                        <tooltip><Tooltip text="Heading"/></tooltip>
+                        <items>
+                            <MenuItem text="Heading 1" onAction="#onWysiwygH1"/>
+                            <MenuItem text="Heading 2" onAction="#onWysiwygH2"/>
+                            <MenuItem text="Heading 3" onAction="#onWysiwygH3"/>
+                            <MenuItem text="Heading 4" onAction="#onWysiwygH4"/>
+                            <MenuItem text="Heading 5" onAction="#onWysiwygH5"/>
+                            <MenuItem text="Heading 6" onAction="#onWysiwygH6"/>
+                            <SeparatorMenuItem/>
+                            <MenuItem text="Paragraph" onAction="#onWysiwygParagraph"/>
+                        </items>
+                    </MenuButton>
+                    <Separator orientation="VERTICAL"/>
+                    <Button onAction="#onWysiwygBold">
+                        <graphic><FontIcon iconLiteral="mdi2f-format-bold" iconSize="16"/></graphic>
+                        <tooltip><Tooltip text="Bold"/></tooltip>
+                    </Button>
+                    <Button onAction="#onWysiwygItalic">
+                        <graphic><FontIcon iconLiteral="mdi2f-format-italic" iconSize="16"/></graphic>
+                        <tooltip><Tooltip text="Italic"/></tooltip>
+                    </Button>
+                    <Button onAction="#onWysiwygStrikethrough">
+                        <graphic><FontIcon iconLiteral="mdi2f-format-strikethrough" iconSize="16"/></graphic>
+                        <tooltip><Tooltip text="Strikethrough"/></tooltip>
+                    </Button>
+                    <Separator orientation="VERTICAL"/>
+                    <Button onAction="#onWysiwygBulletList">
+                        <graphic><FontIcon iconLiteral="mdi2f-format-list-bulleted" iconSize="16"/></graphic>
+                        <tooltip><Tooltip text="Bulleted List"/></tooltip>
+                    </Button>
+                    <Button onAction="#onWysiwygOrderedList">
+                        <graphic><FontIcon iconLiteral="mdi2f-format-list-numbered" iconSize="16"/></graphic>
+                        <tooltip><Tooltip text="Numbered List"/></tooltip>
+                    </Button>
+                    <Button onAction="#onWysiwygBlockquote">
+                        <graphic><FontIcon iconLiteral="mdi2f-format-quote-open" iconSize="16"/></graphic>
+                        <tooltip><Tooltip text="Blockquote"/></tooltip>
+                    </Button>
+                    <Separator orientation="VERTICAL"/>
+                    <Button onAction="#onWysiwygInlineCode">
+                        <graphic><FontIcon iconLiteral="mdi2c-code-tags" iconSize="16"/></graphic>
+                        <tooltip><Tooltip text="Inline Code"/></tooltip>
+                    </Button>
+                    <Button onAction="#onWysiwygCodeBlock">
+                        <graphic><FontIcon iconLiteral="mdi2c-code-braces" iconSize="16"/></graphic>
+                        <tooltip><Tooltip text="Code Block"/></tooltip>
+                    </Button>
+                    <Separator orientation="VERTICAL"/>
+                    <Button onAction="#onWysiwygLink">
+                        <graphic><FontIcon iconLiteral="mdi2l-link" iconSize="16"/></graphic>
+                        <tooltip><Tooltip text="Insert Link"/></tooltip>
+                    </Button>
+                    <Button onAction="#onWysiwygHr">
+                        <graphic><FontIcon iconLiteral="mdi2m-minus" iconSize="16"/></graphic>
+                        <tooltip><Tooltip text="Horizontal Rule"/></tooltip>
+                    </Button>
+                </ToolBar>
+                <WebView fx:id="wysiwygEditor" VBox.vgrow="ALWAYS"/>
+            </VBox>
         </StackPane>
     </center>
 

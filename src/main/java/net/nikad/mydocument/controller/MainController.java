@@ -2,12 +2,16 @@ package net.nikad.mydocument.controller;
 
 import javafx.application.Platform;
 import javafx.fxml.FXML;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+
+import java.io.File;
+import java.util.Properties;
 import net.nikad.mydocument.model.Document;
 import net.nikad.mydocument.service.FileService;
 import net.nikad.mydocument.service.MarkdownRenderer;
@@ -20,9 +24,22 @@ import java.nio.file.Path;
 
 public class MainController {
 
+    private static final String APP_VERSION = loadVersion();
+
+    private static String loadVersion() {
+        try (var in = MainController.class.getResourceAsStream("/net/nikad/mydocument/version.properties")) {
+            if (in == null) return "1.0.2";
+            var props = new Properties();
+            props.load(in);
+            return props.getProperty("version", "1.0.2");
+        } catch (Exception e) {
+            return "1.0.2";
+        }
+    }
+
     @FXML private TextArea sourceEditor;
     @FXML private WebView previewPane;
-    @FXML private StackPane wysiwyPane;
+    @FXML private VBox wysiwyPane;
     @FXML private WebView wysiwygEditor;
     @FXML private Label statusLabel;
     @FXML private ToggleButton btnSource;
@@ -35,6 +52,139 @@ public class MainController {
     private Document currentDocument = new Document();
     private EditMode currentMode = EditMode.SOURCE;
     private boolean updatingFromWysiwyg = false;
+
+    private static final String HELP_MARKDOWN = """
+            # Markdown Quick Reference
+
+            MyDocument supports **CommonMark** with GitHub-Flavoured Markdown (GFM) extensions.
+
+            ---
+
+            ## Text Formatting
+
+            | Syntax | Result |
+            |---|---|
+            | `**bold**` or `__bold__` | **bold** |
+            | `*italic*` or `_italic_` | *italic* |
+            | `~~strikethrough~~` | ~~strikethrough~~ |
+            | `` `inline code` `` | `inline code` |
+
+            ---
+
+            ## Headings
+
+            ```
+            # Heading 1
+            ## Heading 2
+            ### Heading 3
+            #### Heading 4
+            ##### Heading 5
+            ###### Heading 6
+            ```
+
+            ---
+
+            ## Lists
+
+            **Unordered** — use `-`, `*`, or `+`:
+
+            ```
+            - Item 1
+            - Item 2
+              - Nested item
+            - Item 3
+            ```
+
+            **Ordered:**
+
+            ```
+            1. First item
+            2. Second item
+            3. Third item
+            ```
+
+            ---
+
+            ## Links and Images
+
+            ```
+            [Link text](https://example.com)
+            [Link with title](https://example.com "Title")
+
+            ![Alt text](image.png)
+            ```
+
+            Bare URLs are auto-linked: https://example.com
+
+            ---
+
+            ## Code
+
+            **Inline** — wrap with backticks:
+
+            ```
+            Use `System.out.println()` here.
+            ```
+
+            **Block** — wrap with triple backticks (optionally add a language):
+
+            ````
+            ```java
+            public class Hello {
+                public static void main(String[] args) {
+                    System.out.println("Hello, world!");
+                }
+            }
+            ```
+            ````
+
+            ---
+
+            ## Blockquotes
+
+            ```
+            > This is a blockquote.
+            > It can span multiple lines.
+            >
+            > Even multiple paragraphs.
+            ```
+
+            ---
+
+            ## Tables (GFM)
+
+            ```
+            | Header 1 | Header 2 | Header 3 |
+            |----------|:--------:|---------:|
+            | Left     | Center   | Right    |
+            | Cell     | Cell     | Cell     |
+            ```
+
+            Column alignment: `:---` left · `:---:` centre · `---:` right.
+
+            ---
+
+            ## Horizontal Rule
+
+            Three or more hyphens, asterisks, or underscores on their own line:
+
+            ```
+            ---
+            ```
+
+            ---
+
+            ## Keyboard Shortcuts
+
+            | Action   | Shortcut        |
+            |----------|-----------------|
+            | New      | Ctrl+N          |
+            | Open     | Ctrl+O          |
+            | Save     | Ctrl+S          |
+            | Save As  | Ctrl+Shift+S    |
+            | Quit     | Ctrl+Q          |
+            | Help     | F1              |
+            """;
 
     private static final String WYSIWYG_TEMPLATE = """
             <!DOCTYPE html>
@@ -118,6 +268,19 @@ public class MainController {
               return Array.from(el.childNodes).map(convert).join('')
                 .replace(/\\n{3,}/g, '\\n\\n').trim();
             }
+            function insertCode() {
+              var sel = window.getSelection();
+              if (!sel || sel.rangeCount === 0) return;
+              var range = sel.getRangeAt(0);
+              var selected = range.toString();
+              range.deleteContents();
+              var el = document.createElement('code');
+              el.textContent = selected.length > 0 ? selected : 'code';
+              range.insertNode(el);
+              var r = document.createRange();
+              r.setStartAfter(el); r.collapse(true);
+              sel.removeAllRanges(); sel.addRange(r);
+            }
             </script>
             </head>
             <body contenteditable="true" id="editor">
@@ -166,6 +329,72 @@ public class MainController {
         refreshWysiwyg();
     }
 
+    // ── WYSIWYG formatting toolbar ────────────────────────────────────────────
+
+    @FXML void onWysiwygH1()        { execWysiwyg("document.execCommand('formatBlock',false,'h1')"); }
+    @FXML void onWysiwygH2()        { execWysiwyg("document.execCommand('formatBlock',false,'h2')"); }
+    @FXML void onWysiwygH3()        { execWysiwyg("document.execCommand('formatBlock',false,'h3')"); }
+    @FXML void onWysiwygH4()        { execWysiwyg("document.execCommand('formatBlock',false,'h4')"); }
+    @FXML void onWysiwygH5()        { execWysiwyg("document.execCommand('formatBlock',false,'h5')"); }
+    @FXML void onWysiwygH6()        { execWysiwyg("document.execCommand('formatBlock',false,'h6')"); }
+    @FXML void onWysiwygParagraph() { execWysiwyg("document.execCommand('formatBlock',false,'p')"); }
+    @FXML void onWysiwygBold()          { execWysiwyg("document.execCommand('bold')"); }
+    @FXML void onWysiwygItalic()        { execWysiwyg("document.execCommand('italic')"); }
+    @FXML void onWysiwygStrikethrough() { execWysiwyg("document.execCommand('strikeThrough')"); }
+    @FXML void onWysiwygBulletList()    { execWysiwyg("document.execCommand('insertUnorderedList')"); }
+    @FXML void onWysiwygOrderedList()   { execWysiwyg("document.execCommand('insertOrderedList')"); }
+    @FXML void onWysiwygBlockquote()    { execWysiwyg("document.execCommand('formatBlock',false,'blockquote')"); }
+    @FXML void onWysiwygInlineCode()    { execWysiwyg("insertCode()"); }
+    @FXML void onWysiwygCodeBlock()     { execWysiwyg("document.execCommand('formatBlock',false,'pre')"); }
+    @FXML void onWysiwygHr()            { execWysiwyg("document.execCommand('insertHorizontalRule')"); }
+
+    @FXML
+    private void onWysiwygLink() {
+        TextInputDialog dialog = new TextInputDialog("https://");
+        dialog.initOwner(getStage());
+        dialog.setTitle("Insert Link");
+        dialog.setHeaderText(null);
+        dialog.setContentText("URL:");
+        dialog.showAndWait().ifPresent(url -> {
+            String safe = url.replace("\\", "\\\\").replace("'", "\\'");
+            execWysiwyg("document.execCommand('createLink',false,'" + safe + "')");
+        });
+    }
+
+    private void execWysiwyg(String js) {
+        wysiwygEditor.getEngine().executeScript(js);
+    }
+
+    // ── Help ──────────────────────────────────────────────────────────────────
+
+    @FXML
+    private void onHelp() {
+        Stage helpStage = new Stage();
+        helpStage.initOwner(getStage());
+        helpStage.setTitle("Markdown Reference — MyDocument");
+        WebView webView = new WebView();
+        webView.getEngine().loadContent(renderer.renderToHtml(HELP_MARKDOWN), "text/html");
+        helpStage.setScene(new Scene(webView, 720, 640));
+        helpStage.show();
+    }
+
+    @FXML
+    private void onAbout() {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.initOwner(getStage());
+        alert.setTitle("About MyDocument");
+        alert.setHeaderText("MyDocument " + APP_VERSION);
+        alert.setContentText("""
+                A desktop Markdown editor built with JavaFX 21.
+
+                CommonMark with GFM extensions:
+                tables · strikethrough · autolinks · heading anchors
+
+                Open-source under the GNU GPL v3.
+                https://github.com/nikadsoft/MyDocument""");
+        alert.showAndWait();
+    }
+
     private void applyMode(EditMode mode) {
         this.currentMode = mode;
         sourceEditor.setVisible(mode == EditMode.SOURCE);
@@ -174,6 +403,9 @@ public class MainController {
         previewPane.setManaged(mode == EditMode.PREVIEW);
         wysiwyPane.setVisible(mode == EditMode.WYSIWYG);
         wysiwyPane.setManaged(mode == EditMode.WYSIWYG);
+        btnSource.setSelected(mode == EditMode.SOURCE);
+        btnPreview.setSelected(mode == EditMode.PREVIEW);
+        btnWysiwyg.setSelected(mode == EditMode.WYSIWYG);
     }
 
     // ── File operations ───────────────────────────────────────────────────────
@@ -193,14 +425,23 @@ public class MainController {
         FileChooser chooser = buildMarkdownChooser("Open Markdown File");
         File file = chooser.showOpenDialog(getStage());
         if (file == null) return;
+        loadFile(file, currentMode);
+    }
+
+    public void openFile(File file) {
+        loadFile(file, EditMode.PREVIEW);
+    }
+
+    private void loadFile(File file, EditMode targetMode) {
         try {
             currentDocument = fileService.open(file.toPath());
             updatingFromWysiwyg = true;
             sourceEditor.setText(currentDocument.getContent());
             updatingFromWysiwyg = false;
             updateTitle();
-            if (currentMode == EditMode.PREVIEW) refreshPreview();
-            if (currentMode == EditMode.WYSIWYG) refreshWysiwyg();
+            applyMode(targetMode);
+            if (targetMode == EditMode.PREVIEW) refreshPreview();
+            if (targetMode == EditMode.WYSIWYG) refreshWysiwyg();
             setStatus("Opened: " + file.getName());
         } catch (IOException e) {
             showError("Open failed", e.getMessage());
