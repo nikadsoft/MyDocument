@@ -2,6 +2,9 @@ module net.nikad.mydocument {
     requires javafx.controls;
     requires javafx.fxml;
     requires javafx.web;
+    requires org.kordamp.ikonli.javafx;
+    requires org.kordamp.ikonli.materialdesign2;
+
     requires org.commonmark;
     requires org.commonmark.ext.gfm.tables;
     requires org.commonmark.ext.gfm.strikethrough;

@@ -53,6 +53,72 @@ public class MainController {
               th, td { border: 1px solid #dfe2e5; padding: 6px 13px; }
               th { background: #f6f8fa; }
             </style>
+            <script>
+            function htmlToMarkdown(el) {
+              function convert(node) {
+                if (node.nodeType === 3) return node.textContent;
+                if (node.nodeType !== 1) return '';
+                var tag = node.tagName.toLowerCase();
+                var inner = function() { return Array.from(node.childNodes).map(convert).join(''); };
+                switch (tag) {
+                  case 'h1': return '# ' + inner().trim() + '\\n\\n';
+                  case 'h2': return '## ' + inner().trim() + '\\n\\n';
+                  case 'h3': return '### ' + inner().trim() + '\\n\\n';
+                  case 'h4': return '#### ' + inner().trim() + '\\n\\n';
+                  case 'h5': return '##### ' + inner().trim() + '\\n\\n';
+                  case 'h6': return '###### ' + inner().trim() + '\\n\\n';
+                  case 'p':  return inner().trim() + '\\n\\n';
+                  case 'br': return '\\n';
+                  case 'strong': case 'b': return '**' + inner() + '**';
+                  case 'em':    case 'i': return '*'  + inner() + '*';
+                  case 'del':   case 's': return '~~' + inner() + '~~';
+                  case 'code':
+                    if (node.parentNode && node.parentNode.tagName === 'PRE') return inner();
+                    return '`' + inner() + '`';
+                  case 'pre': {
+                    var codeEl = node.querySelector('code');
+                    var lang = codeEl ? (codeEl.className || '').replace('language-', '') : '';
+                    var content = codeEl ? codeEl.textContent : inner();
+                    return '```' + lang + '\\n' + content + '\\n```\\n\\n';
+                  }
+                  case 'blockquote':
+                    return inner().trim().split('\\n')
+                      .map(function(l) { return '> ' + l; }).join('\\n') + '\\n\\n';
+                  case 'ul':
+                    return Array.from(node.children)
+                      .map(function(li) { return '- ' + convert(li).trim(); })
+                      .join('\\n') + '\\n\\n';
+                  case 'ol':
+                    return Array.from(node.children)
+                      .map(function(li, i) { return (i + 1) + '. ' + convert(li).trim(); })
+                      .join('\\n') + '\\n\\n';
+                  case 'li': return inner();
+                  case 'a':   return '[' + inner() + '](' + (node.getAttribute('href') || '') + ')';
+                  case 'img': return '![' + (node.getAttribute('alt') || '') + '](' + (node.getAttribute('src') || '') + ')';
+                  case 'hr':  return '\\n---\\n\\n';
+                  case 'table': return convertTable(node);
+                  case 'thead': case 'tbody': case 'tfoot':
+                  case 'tr':    case 'th':    case 'td': return inner();
+                  default: return inner();
+                }
+              }
+              function convertTable(table) {
+                var rows = Array.from(table.querySelectorAll('tr'));
+                if (rows.length === 0) return '';
+                var headers = Array.from(rows[0].querySelectorAll('th,td'))
+                  .map(function(c) { return c.textContent.trim(); });
+                var sep = headers.map(function() { return '---'; });
+                var body = rows.slice(1).map(function(row) {
+                  return '| ' + Array.from(row.querySelectorAll('td'))
+                    .map(function(c) { return c.textContent.trim(); }).join(' | ') + ' |';
+                });
+                return '| ' + headers.join(' | ') + ' |\\n| ' + sep.join(' | ') + ' |\\n'
+                  + body.join('\\n') + '\\n\\n';
+              }
+              return Array.from(el.childNodes).map(convert).join('')
+                .replace(/\\n{3,}/g, '\\n\\n').trim();
+            }
+            </script>
             </head>
             <body contenteditable="true" id="editor">
             %s
@@ -197,12 +263,12 @@ public class MainController {
 
     private void syncFromWysiwyg() {
         WebEngine engine = wysiwygEditor.getEngine();
-        Object result = engine.executeScript("document.getElementById('editor').innerHTML");
-        if (result instanceof String html) {
-            // Store raw HTML as content when in WYSIWYG mode
+        Object result = engine.executeScript(
+                "htmlToMarkdown(document.getElementById('editor'))");
+        if (result instanceof String markdown) {
             updatingFromWysiwyg = true;
-            currentDocument.setContent(html);
-            sourceEditor.setText(html);
+            currentDocument.setContent(markdown);
+            sourceEditor.setText(markdown);
             updatingFromWysiwyg = false;
         }
     }
