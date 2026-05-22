@@ -3,6 +3,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.web.WebView?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
 
 <BorderPane xmlns="http://javafx.com/javafx/21"
             xmlns:fx="http://javafx.com/fxml/1"
@@ -28,12 +29,21 @@
 
             <ToolBar>
                 <Label text="View: "/>
-                <ToggleButton fx:id="btnSource"   text="Source"   selected="true"
-                              toggleGroup="$modeGroup" onAction="#onSourceMode"/>
-                <ToggleButton fx:id="btnPreview"  text="Preview"
-                              toggleGroup="$modeGroup" onAction="#onPreviewMode"/>
-                <ToggleButton fx:id="btnWysiwyg"  text="WYSIWYG"
-                              toggleGroup="$modeGroup" onAction="#onWysiwygMode"/>
+                <ToggleButton fx:id="btnSource" selected="true"
+                              toggleGroup="$modeGroup" onAction="#onSourceMode">
+                    <graphic><FontIcon iconLiteral="mdi2c-code-tags" iconSize="18"/></graphic>
+                    <tooltip><Tooltip text="Source"/></tooltip>
+                </ToggleButton>
+                <ToggleButton fx:id="btnPreview"
+                              toggleGroup="$modeGroup" onAction="#onPreviewMode">
+                    <graphic><FontIcon iconLiteral="mdi2e-eye" iconSize="18"/></graphic>
+                    <tooltip><Tooltip text="Preview"/></tooltip>
+                </ToggleButton>
+                <ToggleButton fx:id="btnWysiwyg"
+                              toggleGroup="$modeGroup" onAction="#onWysiwygMode">
+                    <graphic><FontIcon iconLiteral="mdi2p-pencil" iconSize="18"/></graphic>
+                    <tooltip><Tooltip text="WYSIWYG"/></tooltip>
+                </ToggleButton>
             </ToolBar>
         </VBox>
     </top>
