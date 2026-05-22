@@ -120,12 +120,15 @@ jlink {
         def baseOpts = ['--description', 'Markdown editor with WYSIWYG, source and preview modes']
         if (OperatingSystem.current().windows) {
             installerType   = 'msi'
+            icon            = 'src/main/packaging/windows/icon.ico'
             installerOptions = baseOpts + ['--win-menu', '--win-shortcut', '--win-dir-chooser']
         } else if (OperatingSystem.current().macOsX) {
             installerType   = 'dmg'
+            icon            = 'src/main/packaging/macos/icon.icns'
             installerOptions = baseOpts
         } else {
             installerType   = 'deb'
+            icon            = 'src/main/packaging/linux/icon.png'
             installerOptions = baseOpts + ['--linux-shortcut']
         }
     }
