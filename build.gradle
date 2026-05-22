@@ -57,7 +57,7 @@ test {
 }
 
 jacoco {
-    toolVersion = '0.8.12'
+    toolVersion = '0.8.14'
 }
 
 // JavaFX application entry point and FXML controller are pure UI wiring;
