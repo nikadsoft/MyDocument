@@ -8,6 +8,10 @@
             xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="net.nikad.mydocument.controller.MainController">
 
+    <fx:define>
+        <ToggleGroup fx:id="modeGroup"/>
+    </fx:define>
+
     <top>
         <VBox>
             <MenuBar>
@@ -24,7 +28,6 @@
 
             <ToolBar>
                 <Label text="View: "/>
-                <ToggleGroup fx:id="modeGroup"/>
                 <ToggleButton fx:id="btnSource"   text="Source"   selected="true"
                               toggleGroup="$modeGroup" onAction="#onSourceMode"/>
                 <ToggleButton fx:id="btnPreview"  text="Preview"
