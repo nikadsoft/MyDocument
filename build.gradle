@@ -1,0 +1,98 @@
+plugins {
+    id 'java'
+    id 'application'
+    id 'org.openjfx.javafxplugin' version '0.1.0'
+    id 'jacoco'
+}
+
+group = 'net.nikad'
+version = '0.1.0-SNAPSHOT'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
+javafx {
+    version = '21'
+    modules = ['javafx.controls', 'javafx.fxml', 'javafx.web']
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.commonmark:commonmark:0.22.0'
+    implementation 'org.commonmark:commonmark-ext-gfm-tables:0.22.0'
+    implementation 'org.commonmark:commonmark-ext-gfm-strikethrough:0.22.0'
+    implementation 'org.commonmark:commonmark-ext-autolink:0.22.0'
+    implementation 'org.commonmark:commonmark-ext-heading-anchor:0.22.0'
+
+    testImplementation platform('org.junit:junit-bom:5.10.2')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation 'org.testfx:testfx-junit5:4.0.18'
+    testImplementation 'org.testfx:testfx-core:4.0.18'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testRuntimeOnly 'org.openjfx:javafx-graphics:21:linux'
+}
+
+application {
+    mainClass = 'net.nikad.mydocument.MyDocumentApp'
+    applicationDefaultJvmArgs = [
+        '--add-opens', 'javafx.graphics/com.sun.javafx.application=ALL-UNNAMED',
+        '--add-exports', 'javafx.graphics/com.sun.javafx.application=ALL-UNNAMED'
+    ]
+}
+
+test {
+    useJUnitPlatform()
+    jvmArgs '-Dtestfx.robot=glass', '-Dtestfx.headless=true',
+            '-Dprism.order=sw', '-Dprism.verbose=true',
+            '-Djava.awt.headless=true'
+    finalizedBy jacocoTestReport
+}
+
+jacoco {
+    toolVersion = '0.8.12'
+}
+
+// JavaFX application entry point and FXML controller are pure UI wiring;
+// exclude them so the 80% threshold applies only to testable business logic.
+def jacocoExcludes = [
+    'net/nikad/mydocument/MyDocumentApp.class',
+    'net/nikad/mydocument/controller/**',
+]
+
+jacocoTestReport {
+    dependsOn test
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: jacocoExcludes)
+        }))
+    }
+    reports {
+        xml.required = true
+        html.required = true
+        csv.required = false
+    }
+}
+
+jacocoTestCoverageVerification {
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: jacocoExcludes)
+        }))
+    }
+    violationRules {
+        rule {
+            limit {
+                counter = 'LINE'
+                value = 'COVEREDRATIO'
+                minimum = 0.80
+            }
+        }
+    }
+}
+
+check.dependsOn jacocoTestCoverageVerification
