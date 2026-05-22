@@ -1,0 +1,16 @@
+title: MyDocument
+description: A JavaFX 21 Markdown editor with WYSIWYG, source, and preview modes.
+theme: minima
+url: "https://nikadsoft.github.io"
+baseurl: "/MyDocument"
+
+show_excerpts: true
+
+minima:
+  skin: dark
+
+header_pages:
+  - index.md
+  - install.md
+  - user-guide.md
+  - developer-guide.md

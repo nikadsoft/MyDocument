@@ -105,6 +105,18 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: sudo apt-get install -y fakeroot
 
+      - name: Build ICNS icon (macOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          mkdir -p src/main/packaging/macos/icon.iconset
+          SRC=src/main/resources/net/nikad/mydocument/icon.png
+          for s in 16 32 64 128 256 512; do
+            sips -z $s $s "$SRC" --out "src/main/packaging/macos/icon.iconset/icon_${s}x${s}.png"
+            sips -z $((s*2)) $((s*2)) "$SRC" --out "src/main/packaging/macos/icon.iconset/icon_${s}x${s}@2x.png"
+          done
+          iconutil -c icns src/main/packaging/macos/icon.iconset \
+            -o src/main/packaging/macos/icon.icns
+
       - name: Make gradlew executable
         if: runner.os != 'Windows'
         run: chmod +x gradlew
