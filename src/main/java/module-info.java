@@ -8,7 +8,8 @@ module net.nikad.mydocument {
     requires org.commonmark.ext.autolink;
     requires org.commonmark.ext.heading.anchor;
 
-    opens net.nikad.mydocument            to javafx.fxml;
+    // javafx.graphics instantiates MyDocumentApp via reflection (Application.launch)
+    opens net.nikad.mydocument            to javafx.fxml, javafx.graphics;
     opens net.nikad.mydocument.controller to javafx.fxml;
 
     exports net.nikad.mydocument;
