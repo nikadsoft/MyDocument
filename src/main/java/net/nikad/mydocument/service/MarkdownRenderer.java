@@ -1,9 +1,14 @@
 package net.nikad.mydocument.service;
 
 import org.commonmark.ext.autolink.AutolinkExtension;
+import org.commonmark.ext.footnotes.FootnotesExtension;
+import org.commonmark.ext.front.matter.YamlFrontMatterExtension;
 import org.commonmark.ext.gfm.strikethrough.StrikethroughExtension;
 import org.commonmark.ext.gfm.tables.TablesExtension;
 import org.commonmark.ext.heading.anchor.HeadingAnchorExtension;
+import org.commonmark.ext.image.attributes.ImageAttributesExtension;
+import org.commonmark.ext.ins.InsExtension;
+import org.commonmark.ext.task.list.items.TaskListItemsExtension;
 import org.commonmark.parser.Parser;
 import org.commonmark.renderer.html.HtmlRenderer;
 
@@ -28,6 +33,10 @@ public class MarkdownRenderer {
               blockquote { border-left: 4px solid #dfe2e5; margin: 0; padding: 0 16px; color: #6a737d; }
               a { color: #0366d6; }
               img { max-width: 100%%; }
+              li:has(input[type="checkbox"]) { list-style: none; margin-left: -1.4em; }
+              li input[type="checkbox"] { margin-right: 0.4em; }
+              .footnotes { border-top: 1px solid #dfe2e5; font-size: 0.9em; color: #6a737d; }
+              ins { background: #e6ffed; text-decoration: underline; }
             </style>
             </head>
             <body>
@@ -44,7 +53,12 @@ public class MarkdownRenderer {
                 TablesExtension.create(),
                 StrikethroughExtension.create(),
                 AutolinkExtension.create(),
-                HeadingAnchorExtension.create()
+                HeadingAnchorExtension.create(),
+                TaskListItemsExtension.create(),
+                InsExtension.create(),
+                YamlFrontMatterExtension.create(),
+                FootnotesExtension.create(),
+                ImageAttributesExtension.create()
         );
         this.parser = Parser.builder().extensions(extensions).build();
         this.renderer = HtmlRenderer.builder().extensions(extensions).build();

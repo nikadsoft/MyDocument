@@ -99,6 +99,10 @@
                         <graphic><FontIcon iconLiteral="mdi2f-format-list-numbered" iconSize="16"/></graphic>
                         <tooltip><Tooltip text="Numbered List"/></tooltip>
                     </Button>
+                    <Button onAction="#onWysiwygChecklist">
+                        <graphic><FontIcon iconLiteral="mdi2f-format-list-checks" iconSize="16"/></graphic>
+                        <tooltip><Tooltip text="Checklist"/></tooltip>
+                    </Button>
                     <Button onAction="#onWysiwygBlockquote">
                         <graphic><FontIcon iconLiteral="mdi2f-format-quote-open" iconSize="16"/></graphic>
                         <tooltip><Tooltip text="Blockquote"/></tooltip>

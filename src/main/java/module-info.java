@@ -10,6 +10,11 @@ module net.nikad.mydocument {
     requires org.commonmark.ext.gfm.strikethrough;
     requires org.commonmark.ext.autolink;
     requires org.commonmark.ext.heading.anchor;
+    requires org.commonmark.ext.task.list.items;
+    requires org.commonmark.ext.ins;
+    requires org.commonmark.ext.front.matter;
+    requires org.commonmark.ext.footnotes;
+    requires org.commonmark.ext.image.attributes;
 
     // javafx.graphics instantiates MyDocumentApp via reflection (Application.launch)
     opens net.nikad.mydocument            to javafx.fxml, javafx.graphics;

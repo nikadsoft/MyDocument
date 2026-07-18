@@ -21,6 +21,8 @@ import net.nikad.mydocument.view.TitleFormatter;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class MainController {
 
@@ -49,9 +51,19 @@ public class MainController {
     private final MarkdownRenderer renderer = new MarkdownRenderer();
     private final FileService fileService = new FileService();
 
+    private static final Pattern FRONT_MATTER_PATTERN =
+            Pattern.compile("\\A---\\r?\\n.*?\\r?\\n---[ \\t]*\\r?\\n?", Pattern.DOTALL);
+
     private Document currentDocument = new Document();
     private EditMode currentMode = EditMode.SOURCE;
     private boolean updatingFromWysiwyg = false;
+
+    /**
+     * YAML front matter isn't rendered into the WYSIWYG fragment (commonmark only parses it,
+     * it has no HTML representation), so it's stashed here while in WYSIWYG mode and
+     * re-attached on sync back to avoid silently dropping it.
+     */
+    private String pendingFrontMatter = "";
 
     private static final String HELP_MARKDOWN = """
             # Markdown Quick Reference
@@ -67,6 +79,7 @@ public class MainController {
             | `**bold**` or `__bold__` | **bold** |
             | `*italic*` or `_italic_` | *italic* |
             | `~~strikethrough~~` | ~~strikethrough~~ |
+            | `++inserted++` | ++inserted++ |
             | `` `inline code` `` | `inline code` |
 
             ---
@@ -103,6 +116,13 @@ public class MainController {
             3. Third item
             ```
 
+            **Checklist (task list):**
+
+            ```
+            - [ ] Todo item
+            - [x] Done item
+            ```
+
             ---
 
             ## Links and Images
@@ -112,6 +132,7 @@ public class MainController {
             [Link with title](https://example.com "Title")
 
             ![Alt text](image.png)
+            ![Alt text](image.png){width=300}
             ```
 
             Bare URLs are auto-linked: https://example.com
@@ -174,6 +195,31 @@ public class MainController {
 
             ---
 
+            ## Footnotes
+
+            ```
+            Here is a footnote reference[^1].
+
+            [^1]: And here is the footnote text.
+            ```
+
+            ---
+
+            ## YAML Front Matter
+
+            An optional metadata block at the very top of the document:
+
+            ```
+            ---
+            title: My Document
+            author: Jane Doe
+            ---
+            ```
+
+            Front matter isn't shown in Preview or WYSIWYG, but is preserved in the saved file.
+
+            ---
+
             ## Keyboard Shortcuts
 
             | Action   | Shortcut        |
@@ -222,6 +268,7 @@ public class MainController {
                   case 'strong': case 'b': return '**' + inner() + '**';
                   case 'em':    case 'i': return '*'  + inner() + '*';
                   case 'del':   case 's': return '~~' + inner() + '~~';
+                  case 'ins':              return '++' + inner() + '++';
                   case 'code':
                     if (node.parentNode && node.parentNode.tagName === 'PRE') return inner();
                     return '`' + inner() + '`';
@@ -242,7 +289,19 @@ public class MainController {
                     return Array.from(node.children)
                       .map(function(li, i) { return (i + 1) + '. ' + convert(li).trim(); })
                       .join('\\n') + '\\n\\n';
-                  case 'li': return inner();
+                  case 'li': {
+                    var checkbox = Array.from(node.childNodes).find(function(n) {
+                      return n.nodeType === 1 && n.tagName === 'INPUT' && n.type === 'checkbox';
+                    });
+                    if (checkbox) {
+                      var mark = checkbox.checked ? '[x] ' : '[ ] ';
+                      var rest = Array.from(node.childNodes)
+                        .filter(function(n) { return n !== checkbox; })
+                        .map(convert).join('').replace(/\\s+/g, ' ').trim();
+                      return mark + rest;
+                    }
+                    return inner();
+                  }
                   case 'a':   return '[' + inner() + '](' + (node.getAttribute('href') || '') + ')';
                   case 'img': return '![' + (node.getAttribute('alt') || '') + '](' + (node.getAttribute('src') || '') + ')';
                   case 'hr':  return '\\n---\\n\\n';
@@ -268,6 +327,24 @@ public class MainController {
               return Array.from(el.childNodes).map(convert).join('')
                 .replace(/\\n{3,}/g, '\\n\\n').trim();
             }
+            function toggleChecklist() {
+              document.execCommand('insertUnorderedList');
+              var sel = window.getSelection();
+              if (!sel || sel.rangeCount === 0) return;
+              var node = sel.getRangeAt(0).startContainer;
+              while (node && node.nodeName !== 'LI') node = node.parentNode;
+              if (node && !node.querySelector('input[type="checkbox"]')) {
+                var first = node.firstChild;
+                var cb = document.createElement('input');
+                cb.type = 'checkbox';
+                node.insertBefore(cb, first);
+                node.insertBefore(document.createTextNode(' '), first);
+              }
+            }
+            document.addEventListener('DOMContentLoaded', function() {
+              document.querySelectorAll('#editor input[type="checkbox"]')
+                .forEach(function(cb) { cb.removeAttribute('disabled'); });
+            });
             function insertCode() {
               var sel = window.getSelection();
               if (!sel || sel.rangeCount === 0) return;
@@ -343,6 +420,7 @@ public class MainController {
     @FXML void onWysiwygStrikethrough() { execWysiwyg("document.execCommand('strikeThrough')"); }
     @FXML void onWysiwygBulletList()    { execWysiwyg("document.execCommand('insertUnorderedList')"); }
     @FXML void onWysiwygOrderedList()   { execWysiwyg("document.execCommand('insertOrderedList')"); }
+    @FXML void onWysiwygChecklist()     { execWysiwyg("toggleChecklist()"); }
     @FXML void onWysiwygBlockquote()    { execWysiwyg("document.execCommand('formatBlock',false,'blockquote')"); }
     @FXML void onWysiwygInlineCode()    { execWysiwyg("insertCode()"); }
     @FXML void onWysiwygCodeBlock()     { execWysiwyg("document.execCommand('formatBlock',false,'pre')"); }
@@ -388,7 +466,8 @@ public class MainController {
                 A desktop Markdown editor built with JavaFX 21.
 
                 CommonMark with GFM extensions:
-                tables · strikethrough · autolinks · heading anchors
+                tables · strikethrough · autolinks · heading anchors ·
+                task lists · footnotes · inserted text · image attributes · YAML front matter
 
                 Open-source under the GNU GPL v3.
                 https://github.com/nikadsoft/MyDocument""");
@@ -497,7 +576,15 @@ public class MainController {
     }
 
     private void refreshWysiwyg() {
-        String fragment = renderer.renderToFragment(currentDocument.getContent());
+        String content = currentDocument.getContent();
+        Matcher matcher = FRONT_MATTER_PATTERN.matcher(content);
+        if (matcher.find()) {
+            pendingFrontMatter = matcher.group();
+            content = content.substring(matcher.end());
+        } else {
+            pendingFrontMatter = "";
+        }
+        String fragment = renderer.renderToFragment(content);
         String html = String.format(WYSIWYG_TEMPLATE, fragment);
         wysiwygEditor.getEngine().loadContent(html, "text/html");
     }
@@ -507,9 +594,10 @@ public class MainController {
         Object result = engine.executeScript(
                 "htmlToMarkdown(document.getElementById('editor'))");
         if (result instanceof String markdown) {
+            String combined = pendingFrontMatter.isEmpty() ? markdown : pendingFrontMatter + "\n" + markdown;
             updatingFromWysiwyg = true;
-            currentDocument.setContent(markdown);
-            sourceEditor.setText(markdown);
+            currentDocument.setContent(combined);
+            sourceEditor.setText(combined);
             updatingFromWysiwyg = false;
         }
     }

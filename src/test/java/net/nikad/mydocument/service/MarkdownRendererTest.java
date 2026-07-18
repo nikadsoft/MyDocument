@@ -134,4 +134,48 @@ class MarkdownRendererTest {
         String html = renderer.renderToHtml("1 < 2 & 3 > 2");
         assertTrue(html.contains("&lt;"));
     }
+
+    @Test
+    void renderToHtmlRendersUncheckedTaskListItem() {
+        String html = renderer.renderToHtml("- [ ] todo");
+        assertTrue(html.contains("type=\"checkbox\""));
+        assertFalse(html.contains("checked=\"\""));
+    }
+
+    @Test
+    void renderToHtmlRendersCheckedTaskListItem() {
+        String html = renderer.renderToHtml("- [x] done");
+        assertTrue(html.contains("type=\"checkbox\""));
+        assertTrue(html.contains("checked=\"\""));
+    }
+
+    @Test
+    void renderToHtmlRendersInsertedText() {
+        String html = renderer.renderToHtml("++inserted++");
+        assertTrue(html.contains("<ins>inserted</ins>"));
+    }
+
+    @Test
+    void renderToHtmlRendersFootnotes() {
+        String md = "Text with a footnote[^1].\n\n[^1]: Footnote body.";
+        String html = renderer.renderToHtml(md);
+        assertTrue(html.contains("Footnote body"));
+        assertTrue(html.contains("footnote"));
+    }
+
+    @Test
+    void renderToHtmlStripsYamlFrontMatter() {
+        String md = "---\ntitle: Test\n---\n\n# Body";
+        String html = renderer.renderToHtml(md);
+        assertFalse(html.contains("title:"));
+        assertTrue(html.contains("<h1"));
+        assertTrue(html.contains("Body"));
+    }
+
+    @Test
+    void renderToHtmlRendersImageAttributes() {
+        String html = renderer.renderToHtml("![alt](image.png){width=100}");
+        assertTrue(html.contains("<img"));
+        assertTrue(html.contains("width=\"100\""));
+    }
 }

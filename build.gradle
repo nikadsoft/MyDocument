@@ -34,6 +34,11 @@ dependencies {
     implementation 'org.commonmark:commonmark-ext-gfm-strikethrough:0.28.0'
     implementation 'org.commonmark:commonmark-ext-autolink:0.28.0'
     implementation 'org.commonmark:commonmark-ext-heading-anchor:0.28.0'
+    implementation 'org.commonmark:commonmark-ext-task-list-items:0.28.0'
+    implementation 'org.commonmark:commonmark-ext-ins:0.28.0'
+    implementation 'org.commonmark:commonmark-ext-yaml-front-matter:0.28.0'
+    implementation 'org.commonmark:commonmark-ext-footnotes:0.28.0'
+    implementation 'org.commonmark:commonmark-ext-image-attributes:0.28.0'
 
     testImplementation platform('org.junit:junit-bom:6.1.0')
     testImplementation 'org.junit.jupiter:junit-jupiter'
