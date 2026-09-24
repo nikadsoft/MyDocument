@@ -20,7 +20,7 @@ pipeline {
             // JavaFX UI tests need a display - matches what the old GitHub Actions
             // workflow did (Xvfb + xvfb-run), just running on this agent instead.
             steps {
-                sh 'which xvfb-run || (apt-get update && apt-get install -y xvfb)'
+                sh 'which xvfb-run || apk add --no-cache xvfb-run'
                 sh 'xvfb-run --auto-servernum ./gradlew test jacocoTestReport jacocoTestCoverageVerification'
             }
             post {
