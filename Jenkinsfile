@@ -41,5 +41,35 @@ pipeline {
                 archiveArtifacts artifacts: 'build/jpackage/*.deb', fingerprint: true
             }
         }
+
+        stage('Publish to artifact share') {
+            when { expression { return env.BRANCH_NAME == 'main' } }
+            steps {
+                sh '''
+                    set -e
+                    umask 000
+                    dest=/mnt/artifacts/MyDocument
+                    mkdir -p "$dest"
+                    n=$(find build/libs -maxdepth 1 -name '*.jar' | wc -l)
+                    [ "$n" -gt 0 ] || { echo "no jar in build/libs to publish"; exit 1; }
+                    cp -f build/libs/*.jar "$dest"/
+                '''
+            }
+        }
+
+        stage('Publish installer to artifact share') {
+            when { expression { return env.TAG_NAME?.startsWith('v') } }
+            steps {
+                sh '''
+                    set -e
+                    umask 000
+                    dest=/mnt/artifacts/MyDocument
+                    mkdir -p "$dest"
+                    n=$(find build/jpackage -name '*.deb' | wc -l)
+                    [ "$n" -gt 0 ] || { echo "no .deb under build/jpackage to publish"; exit 1; }
+                    find build/jpackage -name '*.deb' -exec cp -f {} "$dest"/ +
+                '''
+            }
+        }
     }
 }
