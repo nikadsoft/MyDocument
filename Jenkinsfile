@@ -67,7 +67,7 @@ pipeline {
                     mkdir -p "$dest"
                     n=$(find build/jpackage -name '*.deb' | wc -l)
                     [ "$n" -gt 0 ] || { echo "no .deb under build/jpackage to publish"; exit 1; }
-                    find build/jpackage -name '*.deb' -exec cp -f {} "$dest"/ +
+                    find build/jpackage -name '*.deb' -print0 | xargs -0 -I{} cp -f {} "$dest"/
                 '''
             }
         }
